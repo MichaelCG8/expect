@@ -1,0 +1,9 @@
+# IDE files
+.idea/
+
+# vim files
+*~
+
+# Build products
+*.egg-info/
+__pycache__/
