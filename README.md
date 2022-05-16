@@ -6,47 +6,50 @@ and some other action if the return type is `None`.
 
 ## Example usage
 
-    def func() -> Optional[Tuple[int, int]]:
+    def func_2_tuple() -> Optional[Tuple[int, int]]:
 	    return 1, 2
+
+    def func_none() -> Optional[Tuple[int, int]]:
+        return None
 
 ### In conditional expressions
 
-    a, b = expect func() else (0, 0)
+    a, b = expect func_2_tuple() else (0, 0)
 
 equivalent to:
 
-    ret = func()
+    ret = func_2_tuple()
     a, b = ret if ret is not None else (0, 0)
 
 or, with Python >= 3.8:
 
-    a, b = ret if (ret := func()) is not None else (0, 0)
+    a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
 
 ### Complex blocks
 
-    a, b = expect func else:
-        print("func() returned None!")
+    a, b = expect func_2_tuple else:
+        print("func_2_tuple() returned None!")
         other_stuff()
         # a, b = something_else
         # return some_value
 
 equivalent to:
 
-    ret = func()
+    ret = func_2_tuple()
     if ret is not None:
         a, b = ret
     else:
-        print("func() returned None!")
+        print("func_2_tuple() returned None!")
         other_stuff()
         # a, b = something_else
         # return some_value
 
 or, with Python >= 3.8:
 
-    if (ret := func()) is not None:
+    if (ret := func_2_tuple()) is not None:
         a, b = ret
     else:
-        print("func() returned None!")
+        print("func_2_tuple() returned None!")
         other_stuff()
         # a, b = something_else
         # return some_value
@@ -54,12 +57,12 @@ or, with Python >= 3.8:
 
 ### Use with a return statement
 
-    a, b = expect func() else:
+    a, b = expect func_2_tuple() else:
         return
 
 equivalent to:
     
-    ret = func()
+    ret = func_2_tuple()
     if ret is not None:
         a, b = ret
     else:
@@ -67,10 +70,16 @@ equivalent to:
 
 or, with Python >= 3.8:
 
-    if (ret := func()) is not None:
+    if (ret := func_2_tuple()) is not None:
         a, b = ret
     else:
         return
+
+## No else
+
+Without an else, an `UnmetExpectation` is raised.
+
+    a, b = expect func_none()
 
 ## Roadmap
 
@@ -78,12 +87,12 @@ or, with Python >= 3.8:
 
 An alternative to:
 
-    a, b = expect func() else:
+    a, b = expect func_2_tuple() else:
         stuff()
 
 that is currently under consideration is:
 
-    a, b = expect func()
+    a, b = expect func_2_tuple()
     else:
         stuff()
 
@@ -93,10 +102,10 @@ It is possible that both will be supported at some point.
 
 A helper construct `prop` or `expect.prop` could be used to propagate return values:
 
-    a, b = expect.prop func()
+    a, b = expect.prop func_2_tuple()
 
 equivalent to:
 
-    a, b = expect.prop func() else:
+    a, b = expect.prop func_2_tuple() else:
         return
 
