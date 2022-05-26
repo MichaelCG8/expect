@@ -109,3 +109,14 @@ equivalent to:
     a, b = expect.prop func_2_tuple() else:
         return
 
+## TODO
+
+- Improve the quality of the repository.
+
+  https://dev.to/eludadev/take-your-github-repository-to-the-next-level-17ge
+
+  https://pythonbytes.fm/episodes/show/281/ohmyzsh-ohmyposh-mcfly-pls-nerdfonts-wow
+- Implement all syntaxes and make robust to different whitespace, parentheses, etc.
+- Test heavily.
+- Profile difference in module load time.
+
