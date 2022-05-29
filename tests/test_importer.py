@@ -1,7 +1,8 @@
 """
 Test the importing machinery.
 
-The tests should cover use of redundant symbols - e.g. unnecessary parentheses, line continuation using "\" etc.
+The tests should cover use of redundant symbols - e.g. unnecessary parentheses, line
+continuation using "\" etc.
 """
 
 import ast
@@ -12,7 +13,8 @@ from types import ModuleType
 from expect.importer import _modify_tokens, _tokens_to_module
 
 
-# TODO: Import a standard library file using expect_import and check that the module matches the normal import.
+# TODO: Import a standard library file using expect_import and check that the module
+#       matches the normal import.
 
 
 DUMMY_MODULE_SOURCE = """
@@ -35,6 +37,7 @@ def main():
 
 
 def _src2mod(src: str) -> ModuleType:
+    """Convert a source string to a module."""
     dummy_source_obj = BytesIO(src.strip("\r\n").encode("utf-8"))
     dummy_source_tokens = tokenize(dummy_source_obj.readline)
     dummy_module = _tokens_to_module(dummy_source_tokens, "dummy_module")
@@ -42,6 +45,7 @@ def _src2mod(src: str) -> ModuleType:
 
 
 def _modify_string(src: str) -> str:
+    """Modify a source string"""
     dummy_file_obj = BytesIO(src.strip("\r\n").encode("utf-8"))
     modified_tokens = _modify_tokens(tokenize(dummy_file_obj.readline))
     modified_str = untokenize(modified_tokens).decode("utf-8")
@@ -50,11 +54,12 @@ def _modify_string(src: str) -> str:
 
 def test_importer():
     dummy_module = _src2mod(DUMMY_MODULE_SOURCE)
-    assert dummy_module.main() == (1, 2)
+    assert dummy_module.main() == (1, 2)  # pylint: disable=no-member
 
 
 class TestStringConversion:
-    def test_conditional_expression(self):
+    @staticmethod
+    def test_conditional_expression():
         in_str = """
 a, b = expect func_2_tuple() else (0, 0)
 """

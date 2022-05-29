@@ -10,7 +10,7 @@ py-version = "3.8"
 
 [tool.pylint.basic]
 good-names = ["f"]
-no-docstring-rgx = "__.*__"
+no-docstring-rgx = "(^__.*__$|^test_|^Test[A-Z])"
 
 [tool.pylint.format]
 max-line-length = 88
