@@ -1,8 +1,18 @@
+"""
+Test the importing machinery.
+
+The tests should cover use of redundant symbols - e.g. unnecessary parentheses, line continuation using "\" etc.
+"""
+
 import ast
 from io import BytesIO
-from tokenize import tokenize
+from tokenize import tokenize, untokenize
+from types import ModuleType
 
 from expect.importer import _modify_tokens, _tokens_to_module
+
+
+# TODO: Import a standard library file using expect_import and check that the module matches the normal import.
 
 
 DUMMY_MODULE_SOURCE = """
@@ -24,11 +34,18 @@ def main():
 """
 
 
-def _src2mod(src):
+def _src2mod(src: str) -> ModuleType:
     dummy_source_obj = BytesIO(src.strip("\r\n").encode("utf-8"))
     dummy_source_tokens = tokenize(dummy_source_obj.readline)
     dummy_module = _tokens_to_module(dummy_source_tokens, "dummy_module")
     return dummy_module
+
+
+def _modify_string(src: str) -> str:
+    dummy_file_obj = BytesIO(src.strip("\r\n").encode("utf-8"))
+    modified_tokens = _modify_tokens(tokenize(dummy_file_obj.readline))
+    modified_str = untokenize(modified_tokens).decode("utf-8")
+    return modified_str
 
 
 def test_importer():
@@ -44,8 +61,6 @@ a, b = expect func_2_tuple() else (0, 0)
         expected_str = """
 a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
 """
-        dummy_file_obj = BytesIO(in_str.strip("\r\n").encode("utf-8"))
-        edited_str = _modify_tokens(tokenize(dummy_file_obj.readline))
-
-        assert edited_str.strip("\r\n") == expected_str.strip("\r\n")
-        assert ast.dump(ast.parse(edited_str)) == ast.dump(ast.parse(expected_str))
+        modified_str = _modify_string(in_str)
+        assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))

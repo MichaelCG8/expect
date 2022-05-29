@@ -2,3 +2,15 @@
 requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"
 
+[tool.black]
+target-version = ["py38", "py39", "py310"]
+
+[tool.pylint.main]
+py-version = "3.8"
+
+[tool.pylint.basic]
+good-names = ["f"]
+no-docstring-rgx = "__.*__"
+
+[tool.pylint.format]
+max-line-length = 88
