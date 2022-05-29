@@ -1,8 +1,51 @@
-from expect import expect_import
+import ast
+from io import BytesIO
+from tokenize import tokenize
 
-# TODO: Define dummy module in a string.
+from expect.importer import _modify_tokens, _tokens_to_module
+
+
+DUMMY_MODULE_SOURCE = """
+from typing import Optional, Tuple
+
+
+def func() -> Optional[Tuple[int, int]]:
+    return 1, 2
+
+
+def func_n() -> Optional[Tuple[int, int]]:
+    return None
+
+
+def main():
+    # noinspection PyUnresolvedReferences
+    a, b = expect func() else (0, 0)
+    return a, b
+"""
+
+
+def _src2mod(src):
+    dummy_source_obj = BytesIO(src.strip("\r\n").encode("utf-8"))
+    dummy_source_tokens = tokenize(dummy_source_obj.readline)
+    dummy_module = _tokens_to_module(dummy_source_tokens, "dummy_module")
+    return dummy_module
 
 
 def test_importer():
-    dummy_module = expect_import("dummy_module")
+    dummy_module = _src2mod(DUMMY_MODULE_SOURCE)
     assert dummy_module.main() == (1, 2)
+
+
+class TestStringConversion:
+    def test_conditional_expression(self):
+        in_str = """
+a, b = expect func_2_tuple() else (0, 0)
+"""
+        expected_str = """
+a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
+"""
+        dummy_file_obj = BytesIO(in_str.strip("\r\n").encode("utf-8"))
+        edited_str = _modify_tokens(tokenize(dummy_file_obj.readline))
+
+        assert edited_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(edited_str)) == ast.dump(ast.parse(expected_str))
