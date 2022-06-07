@@ -7,7 +7,7 @@ using that modified code.
 
 import importlib
 import sys
-from tokenize import tokenize, untokenize, TokenInfo, NAME, NEWLINE, OP
+from tokenize import tokenize, untokenize, TokenInfo, NAME, NEWLINE, OP, RPAR
 from types import ModuleType
 from typing import Generator, List, Tuple
 
@@ -106,7 +106,7 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
             modified_tokens.extend(pre)
             offset += 8
             in_expect = True
-        elif in_expect and token.type == OP and token.string == ")":
+        elif in_expect and token.exact_type == RPAR:
             # noinspection PyArgumentList
             post = [
                 _add_offset(token, offset),

@@ -19,7 +19,7 @@ and some fallback/special-case action if the return type is `None`.
     def func_none() -> Optional[Tuple[int, int]]:
         return None
 
-### In conditional expressions \[status :hourglass_flowing_sand:<!--Partially implemented-->\]
+### In conditional expressions :hourglass_flowing_sand:<!--Partially implemented-->
 
     a, b = expect func_2_tuple() else (0, 0)
 
@@ -32,7 +32,7 @@ or, with Python >= 3.8:
 
     a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
 
-### Complex blocks \[status :x:<!--Not implemented-->\]
+### Complex blocks :x:<!--Not implemented-->
 
     a, b = expect func_2_tuple else:
         print("func_2_tuple() returned None!")
@@ -62,7 +62,7 @@ or, with Python >= 3.8:
         # return some_value
 
 
-### Use with a return statement \[status :x:<!--Not implemented-->\]
+### Use with a return statement :x:<!--Not implemented-->
 
     a, b = expect func_2_tuple() else:
         return
@@ -82,7 +82,7 @@ or, with Python >= 3.8:
     else:
         return
 
-## No else \[status :x:<!--Not implemented-->\]
+## No else :x:<!--Not implemented-->
 
 Without an else, an `UnmetExpectation` is raised.
 
@@ -90,7 +90,7 @@ Without an else, an `UnmetExpectation` is raised.
 
 ## Roadmap
 
-### Complex block syntax \[status :x:<!--Not implemented-->\]
+### Complex block syntax :x:<!--Not implemented-->
 
 An alternative to:
 
@@ -105,7 +105,7 @@ that is currently under consideration is:
 
 It is possible that both will be supported at some point.
 
-### None propagation \[status :x:<!--Not implemented-->\]
+### None propagation :x:<!--Not implemented-->
 
 A helper construct `prop` or `expect.prop` could be used to propagate return values:
 
