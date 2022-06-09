@@ -72,6 +72,7 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
     in_expect = False
     offset = 0
     last_row = 0
+    conditional_statement_nesting = 0
     for token in tokens:
         if token.start[0] != last_row:
             offset = 0
@@ -118,54 +119,61 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
 
         elif in_expect and token.type == NEWLINE:
             raise ExpectParse("Encountered NEWLINE token while in expect statement.")
+        elif in_expect and token.type == NAME and token.string == "if":
+            conditional_statement_nesting += 1
+            modified_tokens.append(_add_offset(token, offset))
         elif in_expect and token.type == NAME and token.string == "else":
-            # noinspection PyArgumentList
-            post = [
-                _add_offset(
-                    TokenInfo(
-                        OP,
-                        ")",
-                        _pad_pos(token.start, -1),
-                        _pad_pos(token.start, 0),
-                        token.line,
+            if conditional_statement_nesting > 0:
+                conditional_statement_nesting -= 1
+                modified_tokens.append(_add_offset(token, offset))
+            else:
+                # noinspection PyArgumentList
+                post = [
+                    _add_offset(
+                        TokenInfo(
+                            OP,
+                            ")",
+                            _pad_pos(token.start, -1),
+                            _pad_pos(token.start, 0),
+                            token.line,
+                        ),
+                        offset,
                     ),
-                    offset,
-                ),
-                _add_offset(
-                    TokenInfo(
-                        NAME,
-                        "is",
-                        _pad_pos(token.start, 1),
-                        _pad_pos(token.start, 3),
-                        token.line,
+                    _add_offset(
+                        TokenInfo(
+                            NAME,
+                            "is",
+                            _pad_pos(token.start, 1),
+                            _pad_pos(token.start, 3),
+                            token.line,
+                        ),
+                        offset,
                     ),
-                    offset,
-                ),
-                _add_offset(
-                    TokenInfo(
-                        NAME,
-                        "not",
-                        _pad_pos(token.start, 4),
-                        _pad_pos(token.start, 7),
-                        token.line,
+                    _add_offset(
+                        TokenInfo(
+                            NAME,
+                            "not",
+                            _pad_pos(token.start, 4),
+                            _pad_pos(token.start, 7),
+                            token.line,
+                        ),
+                        offset,
                     ),
-                    offset,
-                ),
-                _add_offset(
-                    TokenInfo(
-                        NAME,
-                        "None",
-                        _pad_pos(token.start, 8),
-                        _pad_pos(token.start, 12),
-                        token.line,
+                    _add_offset(
+                        TokenInfo(
+                            NAME,
+                            "None",
+                            _pad_pos(token.start, 8),
+                            _pad_pos(token.start, 12),
+                            token.line,
+                        ),
+                        offset,
                     ),
-                    offset,
-                ),
-            ]
-            modified_tokens.extend(post)
-            offset += 13
-            modified_tokens.append(_add_offset(token, offset)),
-            in_expect = False
+                ]
+                modified_tokens.extend(post)
+                offset += 13
+                modified_tokens.append(_add_offset(token, offset)),
+                in_expect = False
         else:
             modified_tokens.append(_add_offset(token, offset))
 

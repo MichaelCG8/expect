@@ -32,6 +32,19 @@ or, with Python >= 3.8:
 
     a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
 
+This also works where a conditional expression is the `expect` condition.
+
+    a, b = expect (1, 1) if something else None else (0, 0)
+
+equivalent to:
+
+    ret = (1, 1) if something else None
+    a, b = ret if ret is not None else (0, 0)
+
+or, with Python >= 3.8:
+
+    a, b = ret if (ret := (1, 1) if something else None) is not None else (0, 0)
+
 ### Complex blocks :x:<!--Not implemented-->
 
     a, b = expect func_2_tuple else:
