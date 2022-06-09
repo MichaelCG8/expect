@@ -7,7 +7,7 @@ using that modified code.
 
 import importlib
 import sys
-from tokenize import tokenize, untokenize, TokenInfo, NAME, NEWLINE, OP, RPAR
+from tokenize import tokenize, untokenize, TokenInfo, NAME, NEWLINE, OP
 from types import ModuleType
 from typing import Generator, List, Tuple
 
@@ -62,9 +62,6 @@ def _tokens_to_module(
     return module
 
 
-# TODO: Current status:
-#       supports `a, b = expect func() else (0, 0)`
-#       so long as func is not replaced by something with multiple `)`
 def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
     """Modify a token stream to replace `except` with valid Python."""
     modified_tokens = []
