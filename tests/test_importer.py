@@ -152,22 +152,20 @@ a, b = expect
         with pytest.raises(ExpectParse):
             _modify_string(in_str)
 
-
-#
-#     @staticmethod
-#     def test_conditional_expression_internal_parentheses():
-#         in_str = """
-# a, b = (
-#     expect
-#     (func_2_tuple()) else (0, 0)
-# )
-# """
-#         expected_str = """
-# a, b = (
-#     ret if (ret :=
-#     (func_2_tuple())) is not None else (0, 0)
-# )
-# """
-#         modified_str = _modify_string(in_str)
-#         assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
-#         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
+    @staticmethod
+    def test_conditional_expression_internal_parentheses():
+        in_str = """
+a, b = (
+    expect
+    (func_2_tuple()) else (0, 0)
+)
+"""
+        expected_str = """
+a, b = (
+    ret if (ret :=
+    (func_2_tuple())) is not None else (0, 0)
+)
+"""
+        modified_str = _modify_string(in_str)
+        assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
