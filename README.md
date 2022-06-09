@@ -7,10 +7,14 @@
 | :x:                      | Not yet implemented   |
 
 `expect` allows clean handling of `Optional` return types.
-The purpose of the package is to experiment with the idea of adding an `expect-else` clause to Python.
-The intention is to call a function and take some action if the return type is not `None` (the expected result), 
-and some fallback/special-case action if the return type is `None`.
+The purpose of the package is to experiment with the idea of adding an `expect-else`
+clause to Python.
+The intention is to call a function and take some action if the return type is not
+`None` (the expected result), and some fallback/special-case action if the return type
+is `None`.
 
+For now, only Python >= 3.8 is supported, due to usages of `expect` being internally
+replaced by code using the walrus operator.
 ## Example usage
 
     def func_2_tuple() -> Optional[Tuple[int, int]]:
@@ -23,26 +27,22 @@ and some fallback/special-case action if the return type is `None`.
 
     a, b = expect func_2_tuple() else (0, 0)
 
-equivalent to:
-
+    # Equivalent Python < 3.8:
     ret = func_2_tuple()
     a, b = ret if ret is not None else (0, 0)
 
-or, with Python >= 3.8:
-
+    # Equivalent Python >= 3.8:
     a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
 
 This also works where a conditional expression is the `expect` condition.
 
     a, b = expect (1, 1) if something else None else (0, 0)
 
-equivalent to:
-
+    # Equivalent Python < 3.8:
     ret = (1, 1) if something else None
     a, b = ret if ret is not None else (0, 0)
 
-or, with Python >= 3.8:
-
+    # Equivalent Python >= 3.8:
     a, b = ret if (ret := (1, 1) if something else None) is not None else (0, 0)
 
 ### Complex blocks :x:<!--Not implemented-->
@@ -53,8 +53,7 @@ or, with Python >= 3.8:
         # a, b = something_else
         # return some_value
 
-equivalent to:
-
+    # Equivalent Python < 3.8:
     ret = func_2_tuple()
     if ret is not None:
         a, b = ret
@@ -64,8 +63,7 @@ equivalent to:
         # a, b = something_else
         # return some_value
 
-or, with Python >= 3.8:
-
+    # Equivalent Python >= 3.8:
     if (ret := func_2_tuple()) is not None:
         a, b = ret
     else:
@@ -80,16 +78,14 @@ or, with Python >= 3.8:
     a, b = expect func_2_tuple() else:
         return
 
-equivalent to:
-    
+    # Equivalent Python < 3.8:
     ret = func_2_tuple()
     if ret is not None:
         a, b = ret
     else:
         return
 
-or, with Python >= 3.8:
-
+    # Equivalent Python >= 3.8:
     if (ret := func_2_tuple()) is not None:
         a, b = ret
     else:
@@ -124,23 +120,25 @@ A helper construct `prop` or `expect.prop` could be used to propagate return val
 
     a, b = expect.prop func_2_tuple()
 
-equivalent to:
-
+    # Equivalent Python < 3.8:
     a, b = expect.prop func_2_tuple() else:
         return
 
 
 ## Design
 
-For the initial exploration a file using `expect` must be loaded from another scope using an `expect` importer function.
-A single file can be loaded in this way. A package or sub-module consisting of multiple files is a task in the backlog.
-Later versions aim to have this mechanism embedded in the file that contains code using `expect` so that code importing
-this can be unaware of `expect`'s use.
+For the initial exploration a file using `expect` must be loaded from another scope
+using an `expect` importer function.
+A single file can be loaded in this way. A package or submodule consisting of multiple
+files is a task in the backlog.
+Later versions aim to have this mechanism embedded in the file that contains code using
+`expect` so that code importing this can be unaware of `expect`'s use.
 
 The initial process is:
 
 1. A call to the `expect` importer is made using `expect.expect_import()`.
-2. The importer identifies the target module in the file system and reads its contents into a string.
+2. The importer identifies the target module in the file system and reads its contents
+   into a string.
 3. The string is tokenized.
 4. The `expect` usages are replaced by valid python.
 5. The token stream is converted back to a string.
@@ -158,7 +156,8 @@ The initial process is:
 - Test heavily.
 - Profile difference in module load time.
 - Record the positions of the `expect` tokens and their replacements.
-  Convert the modified string code to an AST and manipulate so that the original positions are reported in the event of
-  an exception. Note that Python's 'ast' module cannot parse code using `expect` since it is invalid syntax.
-- Can the AST be manipulated so that in the event of an Exception the traceback presents the code using `expect`?
-
+  Convert the modified string code to an AST and manipulate so that the original
+  positions are reported in the event of an exception. Note that Python's 'ast' module
+  cannot parse code using `expect` since it is invalid syntax.
+- Can the AST be manipulated so that in the event of an Exception the traceback presents
+  the code using `expect`?
