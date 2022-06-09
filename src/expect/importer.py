@@ -12,6 +12,10 @@ from types import ModuleType
 from typing import Generator, List, Tuple
 
 
+class ExpectParse(Exception):
+    pass
+
+
 def _add_offset(token: TokenInfo, offset: int) -> TokenInfo:
     """Shift a token's start and end location in a row by `offset`"""
     new_start = (token.start[0], token.start[1] + offset)
@@ -67,7 +71,12 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
 
     in_expect = False
     offset = 0
+    last_row = 0
     for token in tokens:
+        if token.start[0] != last_row:
+            offset = 0
+            last_row = token.start[0]
+
         if token.type == NAME and token.string == "expect":
             # noinspection PyArgumentList
             pre = [
@@ -106,6 +115,9 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
             modified_tokens.extend(pre)
             offset += 8
             in_expect = True
+
+        elif in_expect and token.type == NEWLINE:
+            raise ExpectParse("Encountered NEWLINE token while in expect statement.")
         elif in_expect and token.exact_type == RPAR:
             # noinspection PyArgumentList
             post = [
@@ -150,7 +162,5 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
             in_expect = False
         else:
             modified_tokens.append(_add_offset(token, offset))
-            if token.type == NEWLINE:
-                offset = 0
 
     return modified_tokens
