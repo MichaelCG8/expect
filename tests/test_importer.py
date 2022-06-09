@@ -19,6 +19,8 @@ from expect.importer import _modify_tokens, _tokens_to_module
 # TODO: Import a standard library file using expect_import and check that the module
 #       matches the normal import.
 
+# TODO: Test nested expect statements.
+#       Will need a counter for expect nesting, rather than an in_expect bool.
 
 DUMMY_MODULE_SOURCE = """
 from typing import Optional, Tuple
@@ -62,7 +64,43 @@ def test_importer():
 
 class TestStringConversion:
     @staticmethod
-    def test_conditional_expression():
+    def test_conditional_expression_literal_none():
+        in_str = """
+a, b = expect None else (0, 0)
+"""
+        expected_str = """
+a, b = ret if (ret := None) is not None else (0, 0)
+"""
+        modified_str = _modify_string(in_str)
+        assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
+
+    @staticmethod
+    def test_conditional_expression_literal_truthy():
+        in_str = """
+a, b = expect 1 else (0, 0)
+"""
+        expected_str = """
+a, b = ret if (ret := 1) is not None else (0, 0)
+"""
+        modified_str = _modify_string(in_str)
+        assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
+
+    @staticmethod
+    def test_conditional_expression_literal_falsy():
+        in_str = """
+a, b = expect 0 else (0, 0)
+"""
+        expected_str = """
+a, b = ret if (ret := 0) is not None else (0, 0)
+"""
+        modified_str = _modify_string(in_str)
+        assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+        assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
+
+    @staticmethod
+    def test_conditional_expression_function():
         in_str = """
 a, b = expect func_2_tuple() else (0, 0)
 """
@@ -113,3 +151,23 @@ a, b = expect
 """
         with pytest.raises(ExpectParse):
             _modify_string(in_str)
+
+
+#
+#     @staticmethod
+#     def test_conditional_expression_internal_parentheses():
+#         in_str = """
+# a, b = (
+#     expect
+#     (func_2_tuple()) else (0, 0)
+# )
+# """
+#         expected_str = """
+# a, b = (
+#     ret if (ret :=
+#     (func_2_tuple())) is not None else (0, 0)
+# )
+# """
+#         modified_str = _modify_string(in_str)
+#         assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
+#         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))

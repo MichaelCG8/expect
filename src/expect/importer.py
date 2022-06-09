@@ -118,20 +118,25 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
 
         elif in_expect and token.type == NEWLINE:
             raise ExpectParse("Encountered NEWLINE token while in expect statement.")
-        elif in_expect and token.exact_type == RPAR:
+        elif in_expect and token.type == NAME and token.string == "else":
             # noinspection PyArgumentList
             post = [
-                _add_offset(token, offset),
                 _add_offset(
-                    TokenInfo(OP, ")", token.end, _pad_pos(token.end, 1), token.line),
+                    TokenInfo(
+                        OP,
+                        ")",
+                        _pad_pos(token.start, -1),
+                        _pad_pos(token.start, 0),
+                        token.line,
+                    ),
                     offset,
                 ),
                 _add_offset(
                     TokenInfo(
                         NAME,
                         "is",
-                        _pad_pos(token.end, 2),
-                        _pad_pos(token.end, 4),
+                        _pad_pos(token.start, 1),
+                        _pad_pos(token.start, 3),
                         token.line,
                     ),
                     offset,
@@ -140,8 +145,8 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
                     TokenInfo(
                         NAME,
                         "not",
-                        _pad_pos(token.end, 5),
-                        _pad_pos(token.end, 8),
+                        _pad_pos(token.start, 4),
+                        _pad_pos(token.start, 7),
                         token.line,
                     ),
                     offset,
@@ -150,8 +155,8 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
                     TokenInfo(
                         NAME,
                         "None",
-                        _pad_pos(token.end, 9),
-                        _pad_pos(token.end, 13),
+                        _pad_pos(token.start, 8),
+                        _pad_pos(token.start, 12),
                         token.line,
                     ),
                     offset,
@@ -159,6 +164,7 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
             ]
             modified_tokens.extend(post)
             offset += 13
+            modified_tokens.append(_add_offset(token, offset)),
             in_expect = False
         else:
             modified_tokens.append(_add_offset(token, offset))
