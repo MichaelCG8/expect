@@ -62,9 +62,9 @@ def test_importer():
     assert dummy_module.main() == (1, 2)  # pylint: disable=no-member
 
 
-class TestStringConversion:
+class TestConditionalExpression:
     @staticmethod
-    def test_conditional_expression_literal_none():
+    def test_condition_literal_none():
         in_str = """
 a, b = expect None else (0, 0)
 """
@@ -76,7 +76,7 @@ a, b = ret if (ret := None) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_literal_truthy():
+    def test_condition_literal_truthy():
         in_str = """
 a, b = expect 1 else (0, 0)
 """
@@ -88,7 +88,7 @@ a, b = ret if (ret := 1) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_literal_falsy():
+    def test_condition_literal_falsy():
         in_str = """
 a, b = expect 0 else (0, 0)
 """
@@ -100,7 +100,7 @@ a, b = ret if (ret := 0) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_function():
+    def test_condition_function():
         in_str = """
 a, b = expect func_2_tuple() else (0, 0)
 """
@@ -112,7 +112,7 @@ a, b = ret if (ret := func_2_tuple()) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_line_continuation():
+    def test_line_continuation():
         in_str = """
 a, b = expect \
     func_2_tuple() else (0, 0)
@@ -126,7 +126,7 @@ a, b = ret if (ret := \
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_wrapping_parentheses():
+    def test_wrapping_parentheses():
         in_str = """
 a, b = (
     expect
@@ -144,16 +144,20 @@ a, b = (
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_unexpected_newline_raises():
+    def test_unexpected_newline_raises():
         in_str = """
 a, b = expect
     func_2_tuple() else (0, 0)
 """
-        with pytest.raises(ExpectParse):
+        with pytest.raises(ExpectParse) as exc_info:
             _modify_string(in_str)
+        assert (
+            str(exc_info.value)
+            == "Encountered NEWLINE token while in expect statement."
+        )
 
     @staticmethod
-    def test_conditional_expression_internal_parentheses():
+    def test_internal_parentheses():
         in_str = """
 a, b = expect (func_2_tuple()) else (0, 0)
 """
@@ -165,7 +169,7 @@ a, b = ret if (ret := (func_2_tuple())) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_with_conditional_expression_condition():
+    def test_condition_is_conditional_expression():
         in_str = """
 a, b = expect (1, 1) if something else None else (0, 0)
 """
@@ -177,7 +181,7 @@ a, b = ret if (ret := (1, 1) if something else None) is not None else (0, 0)
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
 
     @staticmethod
-    def test_conditional_expression_with_chained_conditional_expression_condition():
+    def test_condition_is_chained_conditional_expression():
         in_str = """
 a, b = expect (1, 1) if something else None if something_else else None else (0, 0)
 """
@@ -187,3 +191,48 @@ a, b = ret if (ret := (1, 1) if something else None if something_else else None)
         modified_str = _modify_string(in_str)
         assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
+
+    # TODO: No else should raise UnmetExpectation when the condition is None
+    #     @staticmethod
+    #     def test_no_else():
+    #         in_str = """
+    # a, b = expect func_2_tuple()
+    # """
+
+    @staticmethod
+    def test_nested_expect_raises():
+        in_str = """
+a, b = expect expect func_2_tuple() else (0, 0) else (1, 1)
+"""
+        # Equivalent intermediate string
+        # """
+        # a, b = ret if (ret := expect func_2_tuple() else (0, 0)) is not None else (1, 1)
+        # """
+        with pytest.raises(ExpectParse) as exc_info:
+            _modify_string(in_str)
+        assert (
+            str(exc_info.value) == "The result of expect cannot be used as a condition."
+        )
+
+    @staticmethod
+    def test_expect_as_condition_raises():
+        in_str_0 = """
+if expect func() else 1:
+    pass
+"""
+        in_str_1 = """
+while expect func():
+    pass
+"""
+
+        with pytest.raises(ExpectParse) as exc_info:
+            _modify_string(in_str_0)
+        assert (
+            str(exc_info.value) == "The result of expect cannot be used as a condition."
+        )
+
+        with pytest.raises(ExpectParse) as exc_info:
+            _modify_string(in_str_1)
+        assert (
+            str(exc_info.value) == "The result of expect cannot be used as a condition."
+        )

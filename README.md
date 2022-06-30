@@ -97,6 +97,23 @@ Without an else, an `UnmetExpectation` is raised.
 
     a, b = expect func_none()
 
+## Unsupported Syntax
+
+There is no intention to support the result of an `expect` as a condition to other code.
+This policy is open for discussion if a practical use case is put forward.
+
+For example, as the condition of an `if` or `while` of the form:
+
+    if expect func() else 1:
+        ...
+
+    while expect func():
+        ...
+
+Similarly, an `expect` cannot form the condition of another `expect`:
+
+    a, b = expect (1, 1) if expect func_2_tuple() else (0, 0) else None else (1, 1)
+
 ## Roadmap
 
 ### Complex block syntax :x:<!--Not implemented-->
@@ -123,7 +140,6 @@ A helper construct `prop` or `expect.prop` could be used to propagate return val
     # Equivalent Python < 3.8:
     a, b = expect.prop func_2_tuple() else:
         return
-
 
 ## Design
 
