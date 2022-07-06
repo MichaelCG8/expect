@@ -107,7 +107,7 @@ a, b = expect
             modify_string(in_str)
         assert (
             str(exc_info.value)
-            == "Encountered NEWLINE token while in expect statement."
+            == "Encountered NEWLINE token while nested."
         )
 
     @staticmethod
@@ -187,36 +187,6 @@ a, b = (ret if (ret := ret if (ret := func_2_tuple()) is not None else (0, 0)) i
         modified_str = modify_string(in_str)
         assert modified_str.strip("\r\n") == expected_str.strip("\r\n")
         assert ast.dump(ast.parse(modified_str)) == ast.dump(ast.parse(expected_str))
-
-#     @staticmethod
-#     def test_nested_expect_with_parentheses_raises():
-#         in_str = """
-# a, b = expect (expect func_2_tuple() else (0, 0)) else (1, 1)
-# """
-#         # Equivalent intermediate string
-#         # """
-#         # a, b = ret if (ret := expect func_2_tuple() else (0, 0)) is not None else (1, 1)
-#         # """
-#         with pytest.raises(ExpectParse) as exc_info:
-#             modify_string(in_str)
-#         assert (
-#             str(exc_info.value) == "The result of expect cannot be used as a condition."
-#         )
-
-#     @staticmethod
-#     def test_nested_expect_with_multiple_parentheses_raises():
-#         in_str = """
-# a, b = expect ((expect func_2_tuple() else (0, 0))) else (1, 1)
-# """
-#         # Equivalent intermediate string
-#         # """
-#         # a, b = ret if (ret := expect func_2_tuple() else (0, 0)) is not None else (1, 1)
-#         # """
-#         with pytest.raises(ExpectParse) as exc_info:
-#             modify_string(in_str)
-#         assert (
-#             str(exc_info.value) == "The result of expect cannot be used as a condition."
-#         )
 
     @staticmethod
     def test_expect_as_condition():
