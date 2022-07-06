@@ -97,10 +97,9 @@ Without an else, an `UnmetExpectation` is raised.
 
     a, b = expect func_none()
 
-## Unsupported Syntax
+## `expect` as a condition
 
-There is no intention to support the result of an `expect` as a condition to other code.
-This policy is open for discussion if a practical use case is put forward.
+The result of `expect` can be used as a condition.
 
 For example, as the condition of an `if` or `while` of the form:
 
@@ -110,9 +109,23 @@ For example, as the condition of an `if` or `while` of the form:
     while expect func():
         ...
 
-Similarly, an `expect` cannot form the condition of another `expect`:
+Similarly, an `expect` can form the condition of another `expect`,
+although the code is not very readable and so is not recommended.
 
-    a, b = expect (1, 1) if expect func_2_tuple() else (0, 0) else None else (1, 1)
+    a, b = expect expect func_2_tuple() else (0, 0) else (1, 1)
+
+    # Equivalent Python < 3.8
+    ret1 = expect func_2_tuple() else (0, 0)
+    a, b = ret1 if ret1 is not None else (1, 1)
+
+    ret2 = func_2_tuple()
+    ret1 = ret2 if ret2 is not None else (0, 0)
+    a, b = ret1 if ret1 is not None else (1, 1)
+
+
+    # Equivalent Python >= 3.8
+    a, b = ret1 if (ret1 := expect func_2_tuple() else (0, 0)) else (1, 1)
+    a, b = ret1 if (ret1 := ret2 if (ret2 := func_2_tuple()) else (0, 0)) else (1, 1)
 
 ## Roadmap
 

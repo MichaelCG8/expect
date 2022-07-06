@@ -18,8 +18,8 @@ class ExpectParse(Exception):
 
 def _add_offset(token: TokenInfo, offset: int) -> TokenInfo:
     """Shift a token's start and end location in a row by `offset`"""
-    new_start = (token.start[0], token.start[1] + offset)
-    new_end = (token.end[0], token.end[1] + offset)
+    new_start = _pad_pos(token.start, offset)
+    new_end = _pad_pos(token.end, offset)
     # noinspection PyArgumentList
     return TokenInfo(token.type, token.string, new_start, new_end, token.line)
 
@@ -66,10 +66,11 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
     """Modify a token stream to replace `except` with valid Python."""
     modified_tokens = []
 
-    in_expect = False
+    expect_nesting_level = 0
     offset = 0
     last_row = 0
     conditional_statement_nesting = 0
+    nesting = []
     for token in tokens:
         if token.start[0] != last_row:
             offset = 0
@@ -110,18 +111,18 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
                     token.line,
                 ),
             ]
+            pre = [_add_offset(token, offset) for token in pre]
             modified_tokens.extend(pre)
             offset += 8
-            in_expect = True
+            nesting.append("expect")
 
-        elif in_expect and token.type == NEWLINE:
-            raise ExpectParse("Encountered NEWLINE token while in expect statement.")
-        elif in_expect and token.type == NAME and token.string == "if":
-            conditional_statement_nesting += 1
+        elif nesting and token.type == NEWLINE:
+            raise ExpectParse("Encountered NEWLINE token while nested.")
+        elif nesting and token.type == NAME and token.string == "if":
+            nesting.append("conditional_statement")
             modified_tokens.append(_add_offset(token, offset))
-        elif in_expect and token.type == NAME and token.string == "else":
-            if conditional_statement_nesting > 0:
-                conditional_statement_nesting -= 1
+        elif nesting and token.type == NAME and token.string == "else":
+            if nesting[-1] == "conditional_statement":
                 modified_tokens.append(_add_offset(token, offset))
             else:
                 # noinspection PyArgumentList
@@ -170,7 +171,7 @@ def _modify_tokens(tokens: Generator[TokenInfo, None, None]) -> List[TokenInfo]:
                 modified_tokens.extend(post)
                 offset += 13
                 modified_tokens.append(_add_offset(token, offset)),
-                in_expect = False
+            nesting.pop()
         else:
             modified_tokens.append(_add_offset(token, offset))
 
